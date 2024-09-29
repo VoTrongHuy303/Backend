@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     // Các trường được phép mass assignment
     protected $fillable = [
-        'name', 'email', 'password', 'role_id', 'image', 'phone', 'address', 'status','google_id','facebook_id',
+        'name', 'email', 'password', 'role_id', 'image', 'phone', 'address', 'status', 'google_id', 'facebook_id',
     ];
 
     // Các trường sẽ bị ẩn khi trả về model
@@ -25,5 +25,18 @@ class User extends Authenticatable
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

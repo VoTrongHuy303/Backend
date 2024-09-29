@@ -86,31 +86,7 @@ class UserController extends Controller
     }
 
 
-    // public function update(UpdateUserRequest $request, User $user)
-    // {
-    //     $data = $request->all();
 
-    //     // Kiểm tra xem có tải ảnh lên không
-    //     if ($request->hasFile('image')) {
-    //         // Lưu ảnh vào thư mục 'public/images' và lấy tên file
-    //         $imagePath = $request->file('image')->store('images', 'public');
-    //         $data['image'] = $imagePath; // Lưu đường dẫn ảnh vào database
-    //     }
-
-    //     // Cập nhật user với dữ liệu, bao gồm cả đường dẫn ảnh nếu có
-    //     $user->update([
-    //         'name' => $data['name'],
-    //         'email' => $data['email'],
-    //         'password' => $data['password'] ? Hash::make($data['password']) : $user->password,
-    //         'role_id' => $data['role_id'],
-    //         'image' => $data['image'] ?? $user->image,  // Lưu đường dẫn ảnh nếu có
-    //         'phone' => $data['phone'],
-    //         'address' => $data['address'],
-    //         'status' => $data['status'],
-    //     ]);
-
-    //     return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công!');
-    // }
 
 
 
@@ -229,36 +205,7 @@ class UserController extends Controller
         }
     }
 
-    public function facebooklogin()
-    {
-        return Socialite::driver('facebook')->redirect();
-    }
-    public function facebookcallback()
-    {
-        try {
-            $facebookUser = Socialite::driver('facebook')->stateless()->user();
-            $findUser = User::where('facebook_id', $facebookUser->id)->first();
-
-            if ($findUser) {
-                Auth::login($findUser);
-                return redirect()->route('users.index');
-            } else {
-                $newUser = User::create([
-                    'name' => $facebookUser->name,
-                    'email' => $facebookUser->email,
-                    'facebook_id'=> $facebookUser->id,
-                    'password' => Hash::make('123456dummy'),
-                    'role_id' => 2, // Đặt role_id là 2 cho user mới từ Facebook
-                ]);
-
-                Auth::login($newUser);
-                return redirect()->route('users.index');
-            }
-
-        } catch (Exception $e) {
-            return redirect('/login')->withErrors('Unable to login using Facebook. Please try again.');
-        }
-    }
+   
 
     //Reset Password
 

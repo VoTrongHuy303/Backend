@@ -26,31 +26,9 @@
     background-color: #357ae8;
 }
 
-.facebook-login-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
-    background-color: #3b5998;
-    color: white;
-    font-family: 'Roboto', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s;
-}
 
-.facebook-login-btn i {
-    margin-right: 10px;
-}
 
-.facebook-login-btn:hover {
-    background-color: #334d84;
-}
+
 
 
 </style>
@@ -79,13 +57,10 @@
         <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" />
         <span>Sign in with Google</span>
     </a>
-    <a href="{{route('loginfacebook')}}" class="facebook-login-btn">
-        <img src="https://developers.facebook.com/identity/images/g-logo.png" alt="facebook Logo" />
-        <span>Sign in with facebook</span>
-    </a>
     <a href="{{route('password.forgot')}}" class="">
-        <span>password forgot</span>
+        <span>Password Forgot</span>
     </a>
+    <br>
     <a href="{{route('register')}}" class="">
         <span>Register</span>
     </a>
