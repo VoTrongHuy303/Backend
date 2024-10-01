@@ -59,16 +59,13 @@
                         <label for="price" class="form-label">Price</label>
                         <input type="number" step="0.01" class="form-control" id="price" name="price[]" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="weight" class="form-label">Tag</label>
-                        <input type="text" step="0.01" class="form-control" id="tag" name="tag[]">
-                    </div>
+              
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Stock</label>
                         <input type="number" class="form-control" id="quantity" name="stock[]" required>
                     </div>
                     <div class="mb-3">
-                        <label for="expiry" class="form-label">Expiry Date</label>
+                        <label for="expiry" class="form-label">variant_value</label>
                         <input type="text" class="form-control" id="expiry" name="variant_value[]">
                     </div>
                     <div class="mb-3">
@@ -103,15 +100,11 @@
                         <input type="number" step="0.01" class="form-control" id="price" name="price[]" required>
                     </div>
                     <div class="mb-3">
-                        <label for="weight" class="form-label">Tag</label>
-                        <input type="text" step="0.01" class="form-control" id="tag" name="tag[]">
-                    </div>
-                    <div class="mb-3">
                         <label for="quantity" class="form-label">Stock</label>
                         <input type="number" class="form-control" id="quantity" name="stock[]" required>
                     </div>
                     <div class="mb-3">
-                        <label for="expiry" class="form-label">Expiry Date</label>
+                        <label for="expiry" class="form-label">Variant value</label>
                         <input type="text" class="form-control" id="expiry" name="variant_value[]">
                     </div>
                     <div class="mb-3">

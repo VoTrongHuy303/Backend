@@ -7,91 +7,121 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Product_image;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use Dotenv\Validator;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $brands = new Brand();
-        $categories = new category();
-        $options = [];
-        $category_id = '';
-        $query = Product::query();
-        $products = $query->get();
+        // $brands = new Brand();
+        // $categories = new category();
+        // $query = Product::query();
+        // $products = $query->get();
         
-        if(request()->has('search') || request('search') != null ){
-            $search = request('search');
-            $query->where('name','like', '%'. $search . '%')->get();
-         }
-        // return view('Product.home', [
-        //     'product' =>   $products,
-        //     'categories' => $categories::orderBy('id', 'desc')->get(),
-        //     'brands' => $brands::orderBy('id', 'desc')->get(),
-        //     'category_id' => $category_id
-        // ]);
-        return response()->json([
-          'product' =>   $products,
-            'categories' => $categories::orderBy('id', 'desc')->get(),
-            'brands' => $brands::orderBy('id', 'desc')->get(),
-            'category_id' => $category_id
+        $search = $request->input('search');
+        $products = Product::when($search, function ($query, $search) {
+            return $query->where('name', 'like', '%' . $search . '%');
+        })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
+
+        return view('Product.home', [
+            'products' =>   $products,
+            // 'categories' => $categories::orderBy('id', 'desc')->get(),
+            // 'brands' => $brands::orderBy('id', 'desc')->get(),
+            // 'category_id' => $category_id
         ]);
+
+        // return response()->json([
+        //   'product' =>   $products,
+        //     // 'categories' => $categories::orderBy('id', 'desc')->get(),
+        //     // 'brands' => $brands::orderBy('id', 'desc')->get(),
+        //     // 'category_id' => $category_id
+        // ]);
     }
 
-    public function shop()
+    public function shop(Request $request)
     {
         $brands = new Brand();
         $categories = new Category();
-        $query = ProductVariant::query();
-        if(request()->has('category') || request('category') != null ){
-            $category_id = request('category');
-            $query->whereHas('product', function ($q) use ($category_id) {
-                $q->whereIn('category_id', $category_id);
-            })->get();
-         }
-         if(request()->has('brand') || request('brand') != null ){
-            $brand_id = request('brand');
-            $query->whereHas('product', function ($q) use ($brand_id) {
-                $q->whereIn('brand_id', $brand_id);
-            })->get();
-         }
-         if(request()->has('search') || request('search') != null ){
-            $search = request('search');
-            $query->where('name','like', '%'. $search . '%')->get();
-         }
-         if(request()->has('priceRanges') || request('priceRanges') != null ){
-            $priceRanges =  collect(request('priceRanges'));
+         
+        $search = $request->input('search');
+        $categoriesOption = $request->input('category');
+        $brandsOption = $request->input('brand');
+        $priceRangesOption = $request->input('priceRanges');
+
+        $productVariants = ProductVariant::when($search, function ($query, $search) {
+            return $query->where('name', 'like', '%' . $search . '%');
+        })->when($categoriesOption, function ($query, $categoriesOption) {
+            return  $query->whereHas('product', function ($q) use ($categoriesOption) {
+                $q->whereIn('category_id', $categoriesOption);
+            });
+        })->when($brandsOption, function ($query, $brandsOption) {
+            return  $query->whereHas('product', function ($q) use ($brandsOption) {
+                $q->whereIn('brand_id', $brandsOption);
+            });
+        })->when($priceRangesOption, function ($query, $priceRangesOption) {
+            // dd($priceRangesOption);
+            $priceRanges =  collect($priceRangesOption);
             $ChangeValue = $priceRanges->map(function ($priceValue) {
                 $range = explode('-', $priceValue);
                 return (object) ['min' => intval($range[0]), 'max' => intval($range[1])];
             });
-            foreach($ChangeValue as $item){
-                $query->orWhereBetween('price', [$item->min, $item->max]);
-            }
-        }
-        $productVariants = $query->paginate(10)->appends([
-            'priceRanges' => request('priceRanges'),
-            'category' => request('category'),
-            'brand' => request('brand'),
-            'search' => request('search')
-        ]);
-        // return view('Product.shop', [
-        //     'categories' => $categories::orderBy('id', 'desc')->get(),
-        //     'brands' => $brands::orderBy('id', 'desc')->get(),
-        //     'productvariants' => $productVariants,
-        // ]);  
-        return response()->json([
+            $query->where(function ($query) use ($ChangeValue) {
+                foreach ($ChangeValue as $item) {
+                    $query->orWhereBetween('price', [$item->min, $item->max]);
+                }
+            });
+
+        })->orderBy('id', 'desc')->paginate(2)->appends(request()->all());
+
+        // $query = ProductVariant::query();
+        // if(request()->has('category') || request('category') != null ){
+        //     $category_id = request('category');
+        //     $query->whereHas('product', function ($q) use ($category_id) {
+        //         $q->whereIn('category_id', $category_id);
+        //     })->get();
+        //  }
+        //  if(request()->has('brand') || request('brand') != null ){
+        //     $brand_id = request('brand');
+        //     $query->whereHas('product', function ($q) use ($brand_id) {
+        //         $q->whereIn('brand_id', $brand_id);
+        //     })->get();
+        //  }
+        //  if(request()->has('search') || request('search') != null ){
+        //     $search = request('search');
+        //     $query->where('name','like', '%'. $search . '%')->get();
+        //  }
+        //  if(request()->has('priceRanges') || request('priceRanges') != null ){
+        //     $priceRanges =  collect(request('priceRanges'));
+        //     $ChangeValue = $priceRanges->map(function ($priceValue) {
+        //         $range = explode('-', $priceValue);
+        //         return (object) ['min' => intval($range[0]), 'max' => intval($range[1])];
+        //     });
+        //     foreach($ChangeValue as $item){
+        //         $query->orWhereBetween('price', [$item->min, $item->max]);
+        //     }
+        // }
+        // $productVariants = $query->paginate(10)->appends([
+        //     'priceRanges' => request('priceRanges'),
+        //     'category' => request('category'),
+        //     'brand' => request('brand'),
+        //     'search' => request('search')
+        // ]);
+        return view('Product.shop', [
             'categories' => $categories::orderBy('id', 'desc')->get(),
             'brands' => $brands::orderBy('id', 'desc')->get(),
             'productvariants' => $productVariants,
         ]);  
+        // return response()->json([
+        //     'categories' => $categories::orderBy('id', 'desc')->get(),
+        //     'brands' => $brands::orderBy('id', 'desc')->get(),
+        //     'productvariants' => $productVariants,
+        // ]);  
  
     }
 
@@ -99,14 +129,14 @@ class ProductController extends Controller
     {
         $brands = new Brand();
         $categories = new Category();
-        return response()->json([
-            'categories' => $categories::orderBy('id', 'desc')->get(),
-            'brands' => $brands::orderBy('id', 'desc')->get(),
-        ]);  
-        // return view('Product.store', [
+        // return response()->json([
         //     'categories' => $categories::orderBy('id', 'desc')->get(),
         //     'brands' => $brands::orderBy('id', 'desc')->get(),
-        // ]);    
+        // ]);  
+        return view('Product.store', [
+            'categories' => $categories::orderBy('id', 'desc')->get(),
+            'brands' => $brands::orderBy('id', 'desc')->get(),
+        ]);    
     }
 
     /**
@@ -143,7 +173,7 @@ class ProductController extends Controller
         $stocks = $request->input('stock');
         $variant_values = $request->input('variant_value');
         $discounts = $request->input('discount');
-        $tags = $request->input('tag');
+        
         
         // $product_variant = new ProductVariant();
 
@@ -162,7 +192,6 @@ class ProductController extends Controller
             $productVariant->stock = $stocks[$index];
             $productVariant->variant_value = $variant_values[$index];
             $productVariant->discount = $discounts[$index];
-            $productVariant->tag = $tags[$index];
             $productVariant->product_id = $productId;
             $productVariant->save();
         }
@@ -217,20 +246,20 @@ class ProductController extends Controller
         $variants = ProductVariant::where('product_id',$product->id)->get();
         
 
-        return response()->json([
-            'product' => $product,
-            'categories' => $categories::orderBy('id', 'desc')->get(),
-            'brands' => $brands::orderBy('id', 'desc')->get(),
-            'productImages' => ProductImage::where('product_id',$product->id)->get(),
-            'variants' =>$variants
-        ]);
-        // return view('Product.edit', [
+        // return response()->json([
         //     'product' => $product,
         //     'categories' => $categories::orderBy('id', 'desc')->get(),
         //     'brands' => $brands::orderBy('id', 'desc')->get(),
         //     'productImages' => ProductImage::where('product_id',$product->id)->get(),
         //     'variants' =>$variants
         // ]);
+        return view('Product.edit', [
+            'product' => $product,
+            'categories' => $categories::orderBy('id', 'desc')->get(),
+            'brands' => $brands::orderBy('id', 'desc')->get(),
+            'productImages' => ProductImage::where('product_id',$product->id)->get(),
+            'variants' =>$variants
+        ]);
     }
 
     /**
@@ -284,7 +313,6 @@ class ProductController extends Controller
             $stocks = $request->input('stock');
             $variant_values = $request->input('variant_value');
             $discounts = $request->input('discount');
-            $tags = $request->input('tag');
         
     
             foreach ($names as $index => $name) {
@@ -317,7 +345,6 @@ class ProductController extends Controller
                     $productVariant->stock = $stocks[$index];
                     $productVariant->variant_value = $variant_values[$index];
                     $productVariant->discount = $discounts[$index];
-                    $productVariant->tag = $tags[$index];
                     $productVariant->save();
                 } else {
                     $productVariant = new ProductVariant();
@@ -329,7 +356,6 @@ class ProductController extends Controller
                     $productVariant->stock = $stocks[$index];
                     $productVariant->variant_value = $variant_values[$index];
                     $productVariant->discount = $discounts[$index];
-                    $productVariant->tag = $tags[$index];
                     $productVariant->product_id = $product->id;
     
                     $extension = $images[$index]->getClientOriginalExtension();
@@ -422,12 +448,5 @@ class ProductController extends Controller
             ], 500);
         }
     }
-    public function getProductByTag($tag)
-    {
-            $product = ProductVariant::where('tag',$tag)->with('product')->first();
-            if (!$product) {
-                return response()->json(['message' => 'Product not found'], 404);
-            }
-            return response()->json($product);
-    }
+
 }

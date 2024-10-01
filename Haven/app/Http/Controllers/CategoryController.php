@@ -6,23 +6,30 @@ use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+
+        $search = $request->input('search');
+        $categories = Category::when($search, function ($query, $search) {
+            return $query->where('name', 'like', '%' . $search . '%');
+        })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
+
         return response()->json([
             'success' => true,
-            'message' => 'Category đã được cập nhật thành công',
-            'categories' => Category::orderBy('id', 'desc')->get(),
-
+            'categories' => $categories,
         ], 200);
-        // $categories = new Category();
+        
+    
+        
         // return view('Category.home',[
-        //     'categories' => Category::all(),
+        //     'categories' => $categories,
         // ]);
     }
 
@@ -31,7 +38,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        // return view('Category.store');
+        return view('Category.store');
     }
 
     /**
@@ -79,11 +86,14 @@ class CategoryController extends Controller
      */
     public function edit(category $category)
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Category đã được cập nhật thành công',
-            'Category' => $category
-        ], 200);
+        // return response()->json([
+        //     'success' => true,
+        //     'message' => 'Category đã được cập nhật thành công',
+        //     'Category' => $category
+        // ], 200);
+        return view('Category.edit',[
+            'category' => $category,
+        ]);
     }
 
     /**
@@ -168,12 +178,5 @@ class CategoryController extends Controller
         }
     }
     
-    public function getCategoryByTag($tag)
-    {
-            $category = Category::where('tag',$tag)->first();
-            if (!$category) {
-                return response()->json(['message' => 'Category not found'], 404);
-            }
-            return response()->json($category);
-    }
+
 }
