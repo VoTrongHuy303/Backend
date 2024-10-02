@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\ProductController;
 
 /*
@@ -78,5 +79,16 @@ route::group([
     Route::get('/edit/{brand}', [BrandController::class, 'edit'])->name('Brand.edit');
     Route::put('/update/{brand}', [BrandController::class, 'update'])->name('Brand.update');
     Route::delete('/delete/{brand}', [BrandController::class, 'destroy'])->name('Brand.delete');
+ 
+});
+route::group([
+    'prefix' => 'api/flashsale',
+],function(){
+    Route::get('/', [FlashSaleController::class, 'index'])->name('FlashSale.index');
+    Route::get('/create', [FlashSaleController::class, 'create'])->name('FlashSale.create');
+    Route::post('/store', [FlashSaleController::class, 'store'])->name('FlashSale.store');
+    Route::get('/edit/{flashsale}', [FlashSaleController::class, 'edit'])->name('FlashSale.edit');
+    Route::put('/update/{flashsale}', [FlashSaleController::class, 'update'])->name('FlashSale.update');
+    Route::delete('/delete/{flashsale}', [FlashSaleController::class, 'destroy'])->name('FlashSale.delete');
  
 });

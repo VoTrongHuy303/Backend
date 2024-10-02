@@ -26,4 +26,10 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
+    public function getProductVariantCountAttribute()
+    {
+        return $this->product_variants()->count(); // Đếm số lượng flash sale products
+    }
+    protected $appends = ['ProductVariantCount'];
+ 
 }

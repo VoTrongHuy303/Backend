@@ -50,6 +50,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         // Tùy chỉnh phản hồi JSON cho lỗi xác thực
         throw new HttpResponseException(response()->json([
+            'success' => false,
             'message' => 'Dữ liệu không hợp lệ.',
             'errors' => $validator->errors(),
         ], 422));

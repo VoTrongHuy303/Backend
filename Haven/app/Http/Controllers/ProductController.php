@@ -7,8 +7,10 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\FlashSale;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
+use Carbon\Carbon;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
@@ -19,22 +21,29 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        // $brands = new Brand();
-        // $categories = new category();
-        // $query = Product::query();
-        // $products = $query->get();
+        // $startTime = Carbon::parse('2024-10-02 15:16:00');
+        // $endTime = Carbon::parse('2024-10-04 12:08:00');
         
-        $search = $request->input('search');
-        $products = Product::when($search, function ($query, $search) {
-            return $query->where('name', 'like', '%' . $search . '%');
-        })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
+        return response()->json([
+            'flashSaleProducts' =>  ProductVariant::whereHas('flashSales', function ($query) {
+                $query->where('status', 1); // Chỉ lấy flash sale có status = 1 (active)
+            })->get(),
+            'categories' => Category::orderBy('id', 'desc')->get(),
+            'newProducts' => ProductVariant::orderBy('id', 'desc')->get(),
+            'Featured'   => ProductVariant::orderBy('view', 'desc')->get(),
+            ]);
+        
+        // $search = $request->input('search');
+        // $products = Product::when($search, function ($query, $search) {
+        //     return $query->where('name', 'like', '%' . $search . '%');
+        // })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
 
-        return view('Product.home', [
-            'products' =>   $products,
-            // 'categories' => $categories::orderBy('id', 'desc')->get(),
-            // 'brands' => $brands::orderBy('id', 'desc')->get(),
-            // 'category_id' => $category_id
-        ]);
+        // return view('Product.home', [
+        //     'products' =>   $products,
+        //     // 'categories' => $categories::orderBy('id', 'desc')->get(),
+        //     // 'brands' => $brands::orderBy('id', 'desc')->get(),
+        //     // 'category_id' => $category_id
+        // ]);
 
         // return response()->json([
         //   'product' =>   $products,
@@ -77,51 +86,19 @@ class ProductController extends Controller
                 }
             });
 
-        })->orderBy('id', 'desc')->paginate(2)->appends(request()->all());
+        })->orderBy('id', 'desc')->paginate(10)->appends(request()->all());
 
-        // $query = ProductVariant::query();
-        // if(request()->has('category') || request('category') != null ){
-        //     $category_id = request('category');
-        //     $query->whereHas('product', function ($q) use ($category_id) {
-        //         $q->whereIn('category_id', $category_id);
-        //     })->get();
-        //  }
-        //  if(request()->has('brand') || request('brand') != null ){
-        //     $brand_id = request('brand');
-        //     $query->whereHas('product', function ($q) use ($brand_id) {
-        //         $q->whereIn('brand_id', $brand_id);
-        //     })->get();
-        //  }
-        //  if(request()->has('search') || request('search') != null ){
-        //     $search = request('search');
-        //     $query->where('name','like', '%'. $search . '%')->get();
-        //  }
-        //  if(request()->has('priceRanges') || request('priceRanges') != null ){
-        //     $priceRanges =  collect(request('priceRanges'));
-        //     $ChangeValue = $priceRanges->map(function ($priceValue) {
-        //         $range = explode('-', $priceValue);
-        //         return (object) ['min' => intval($range[0]), 'max' => intval($range[1])];
-        //     });
-        //     foreach($ChangeValue as $item){
-        //         $query->orWhereBetween('price', [$item->min, $item->max]);
-        //     }
-        // }
-        // $productVariants = $query->paginate(10)->appends([
-        //     'priceRanges' => request('priceRanges'),
-        //     'category' => request('category'),
-        //     'brand' => request('brand'),
-        //     'search' => request('search')
-        // ]);
-        return view('Product.shop', [
-            'categories' => $categories::orderBy('id', 'desc')->get(),
-            'brands' => $brands::orderBy('id', 'desc')->get(),
-            'productvariants' => $productVariants,
-        ]);  
-        // return response()->json([
+      
+        // return view('Product.shop', [
         //     'categories' => $categories::orderBy('id', 'desc')->get(),
         //     'brands' => $brands::orderBy('id', 'desc')->get(),
         //     'productvariants' => $productVariants,
         // ]);  
+        return response()->json([
+            'categories' => $categories::orderBy('id', 'desc')->get(),
+            'brands' => $brands::orderBy('id', 'desc')->get(),
+            'productvariants' => $productVariants,
+        ]);  
  
     }
 
@@ -169,7 +146,7 @@ class ProductController extends Controller
 
         $names = $request->input('name');
         $prices = $request->input('price');
-        $images = $request->file('image'); // Xử lý file hình ảnh
+        $images = $request->file('image'); 
         $stocks = $request->input('stock');
         $variant_values = $request->input('variant_value');
         $discounts = $request->input('discount');
@@ -216,13 +193,9 @@ class ProductController extends Controller
      */
     public function show(ProductVariant $productVariant)
     {
-
+        $productVariant->view =+ 1; 
+        $productVariant->update();
         return response()->json([
-            // 'categories' => $categories::orderBy('id', 'desc')->get(),
-            // 'brands' => $brands::orderBy('id', 'desc')->get(),
-            // // 'product' => ProductVariant::
-            // 'productvariants' => $productVariants,
-            // 'product' => $productVariant->product,
             'productVariant' => $productVariant,
             'productImages' => ProductImage::where('product_id',$productVariant->product->id)->get(),
             'relatedProductVariants' => ProductVariant::where('product_id',$productVariant->product->id)->get(),
@@ -235,7 +208,18 @@ class ProductController extends Controller
         //     'product' => $productVariant->product,
         // ]);
     }
-
+    public function home()
+    {
+        return response()->json([
+        'flashSales' =>  FlashSale::where('status',1)->productVariants,
+        'categories' => Category::orderBy('id', 'desc')->get(),
+        'newProducts' => ProductVariant::orderBy('id', 'desc')->get(),
+        'Featured'   => ProductVariant::orderBy('view', 'desc')->get(),
+        ]);
+        // return view('Product.detail', [
+       
+        // ]);
+    }
     /**
      * Show the form for editing the specified resource.
      */
