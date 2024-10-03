@@ -23,114 +23,87 @@ use App\Models\PasswordReset;
 
 class UserController extends Controller
 {
-    private Builder $model;
-
-    public function __construct()
+    public function index()
     {
-        $this->model = (new User())->query();
-    }
-
-    public function index(Request $request)
-    {
-        $users = $this->model->with('role')->get();
-        return view('users.index', compact('users'));
+        $users = User::with('role')->get();
+        return response()->json($users, 200);
     }
 
     public function show($id)
     {
-        $user = $this->model->findOrFail($id);
-        return view('users.show', compact('user'));
+        $user = User::findOrFail($id);
+        return response()->json($user, 200);
     }
 
-    public function create()
+    public function store(Request $request)
     {
-        $roles = Role::all();
-        return view('users.create', compact('roles'));
-    }
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role_id' => 'required|integer',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'status' => 'nullable',
+            'image' => 'nullable'
+        ]);
 
-    public function edit(User $user)
-    {
-        $roles = Role::all();
-        return view('users.edit', compact('user', 'roles'));
-    }
-
-
-    public function store(StoreUserRequest $request)
-    {
-        $data = $request->all();
-
-        // Kiểm tra xem có tải ảnh lên không
         if ($request->hasFile('image')) {
             try {
-                // Upload ảnh lên Cloudinary
                 $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
                 $data['image'] = $uploadedFileUrl;
             } catch (Exception $e) {
-                return redirect()->back()->withErrors(['image' => 'Failed to upload image to Cloudinary: ' . $e->getMessage()]);
+                return response()->json(['error' => 'Failed to upload image to Cloudinary'], 500);
             }
         }
 
-        // Tạo user với dữ liệu
-        $this->model->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role_id' => $data['role_id'],
-            'image' => $data['image'] ?? null,
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'status' => $data['status'],
-        ]);
+        $data['password'] = Hash::make($data['password']);
+        $user = User::create($data);
 
-        return redirect()->route('users.index')->with('success', 'Tạo người dùng thành công!');
+        return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
     }
 
-
-
-
-
-
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(Request $request, $id)
     {
-        $data = $request->all();
-    
-        // Kiểm tra xem có tải ảnh lên không
+        $user = User::findOrFail($id);
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:6',
+            'role_id' => 'required|integer',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'status' => 'required|boolean',
+            'image' => 'nullable'
+        ]);
+
         if ($request->hasFile('image')) {
             try {
-                // Upload ảnh lên Cloudinary và lấy URL ảnh đã upload
                 $uploadedFileUrl = Cloudinary::upload($request->file('image')->getRealPath())->getSecurePath();
-                $data['image'] = $uploadedFileUrl; // Lưu URL từ Cloudinary vào biến $data
+                $data['image'] = $uploadedFileUrl;
             } catch (Exception $e) {
-                return back()->withErrors(['image' => 'Failed to upload image. Please try again.']);
+                return response()->json(['error' => 'Failed to upload image to Cloudinary'], 500);
             }
         } else {
-            // Nếu không có ảnh mới được tải lên, giữ nguyên ảnh cũ
             $data['image'] = $user->image;
         }
-    
-        // Cập nhật user với dữ liệu, bao gồm cả đường dẫn ảnh nếu có
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'] ? Hash::make($data['password']) : $user->password,
-            'role_id' => $data['role_id'],
-            'image' => $data['image'],  // Sử dụng ảnh mới hoặc giữ lại ảnh cũ
-            'phone' => $data['phone'],
-            'address' => $data['address'],
-            'status' => $data['status'],  // Đảm bảo cập nhật cả status
-        ]);
-    
-        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công!');
+
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json(['message' => 'User updated successfully', 'user' => $user], 200);
     }
-    
 
-    
-
-
-    public function destroy(User $user)
+    public function destroy($id)
     {
+        $user = User::findOrFail($id);
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Xóa người dùng thành công.');
+
+        return response()->json(['message' => 'User deleted successfully'], 200);
     }
 
     // Chức năng đăng nhập
@@ -139,114 +112,105 @@ class UserController extends Controller
         return view("login");
     }
 
+    // Đăng nhập qua API
     public function login(LoginRequest $request)
     {
-        // Lấy dữ liệu email và mật khẩu từ form
         $credentials = $request->only('email', 'password');
 
-        // Kiểm tra xác thực
         if (Auth::attempt($credentials)) {
-            // Xác thực thành công
             $request->session()->regenerate();
-
-            // Chuyển hướng đến trang sau khi đăng nhập thành công
-            return redirect()->route('users.index')->with('success', 'Đăng nhập thành công.');
+            return response()->json(['message' => 'Đăng nhập thành công'], 200);
         }
 
-        // Xác thực thất bại
-        return back()->withErrors([
-            'email' => 'Email hoặc mật khẩu không đúng.',
-        ])->withInput();
+        return response()->json(['error' => 'Email hoặc mật khẩu không đúng'], 401);
     }
-   
 
+    // Đăng xuất qua API
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login')->with('success', 'Đăng xuất thành công.');
+        return response()->json(['message' => 'Đăng xuất thành công'], 200);
     }
+
+    // Đăng nhập Google API
     public function googlelogin()
     {
-        return Socialite::driver('google')->redirect();
+        return response()->json(['url' => Socialite::driver('google')->redirect()->getTargetUrl()], 200);
     }
+
     public function googlecallback()
     {
         try {
             $googleUser = Socialite::driver('google')->user();
-            
-            // Tìm người dùng bằng google_id
             $findUser = User::where('google_id', $googleUser->id)->first();
-            
+
             if ($findUser) {
                 // Đăng nhập nếu tìm thấy người dùng
                 Auth::login($findUser);
-                return redirect()->route('users.index');
+                return response()->json(['message' => 'Đăng nhập Google thành công'], 200);
             } else {
-                // Tạo người dùng mới với role_id = 2 (user)
-                $newUser = User::create([
-                    'name' => $googleUser->name,
-                    'email' => $googleUser->email,
-                    'google_id'=> $googleUser->id,
-                    'password' => Hash::make('123456dummy'), // Mật khẩu ngẫu nhiên cho user từ Google
-                    'role_id' => 2, // Đặt role_id là 2 (user)
-                ]);
+                // Tìm role có name là 'user'
+                $role = Role::where('name', 'user')->first();
 
-                // Đăng nhập người dùng mới
-                Auth::login($newUser);
-                return redirect()->route('users.index');
+                // Kiểm tra xem role có tồn tại không
+                if ($role) {
+                    // Tạo người dùng mới với role_id từ vai trò 'user'
+                    $newUser = User::create([
+                        'name' => $googleUser->name,
+                        'email' => $googleUser->email,
+                        'google_id'=> $googleUser->id,
+                        'password' => Hash::make('123456dummy'), // Mật khẩu ngẫu nhiên cho user từ Google
+                        'role_id' => $role->id, // Đặt role_id bằng id của role có name là 'user'
+                    ]);
+
+                    // Đăng nhập người dùng mới
+                    Auth::login($newUser);
+                    return response()->json(['message' => 'Người dùng mới được tạo và đăng nhập thành công'], 200);
+                } else {
+                    // Xử lý nếu không tìm thấy vai trò 'user'
+                    return response()->json(['error' => 'Vai trò "user" không tồn tại'], 400);
+                }
             }
-
         } catch (Exception $e) {
-            return redirect('/login')->withErrors('Unable to login using Google. Please try again.');
+            return response()->json(['error' => 'Không thể đăng nhập qua Google', 'details' => $e->getMessage()], 500);
         }
     }
 
-   
 
-    //Reset Password
+    // Reset Password API
 
+    // Hiển thị form quên mật khẩu
     public function showForgotForm()
     {
         return view('forgot-password');
     }
 
-    // Send reset code via email
+    // Gửi mã khôi phục qua email
     public function sendResetCode(Request $request)
     {
         $request->validate(['email' => 'required|email|exists:users,email']);
 
-        // Generate a random 5-digit code
         $code = rand(10000, 99999);
+        PasswordReset::updateOrCreate(['email' => $request->email], ['token' => $code, 'created_at' => Carbon::now()]);
 
-        // Store the reset code in the password_resets table
-        PasswordReset::updateOrCreate(
-            ['email' => $request->email],
-            ['token' => $code, 'created_at' => Carbon::now()]
-        );
-
-        // Send the code via email
         Mail::send('reset-code', ['code' => $code], function ($message) use ($request) {
             $message->to($request->email);
-            $message->subject('Your Password Reset Code');
+            $message->subject('Mã khôi phục mật khẩu');
         });
 
-        return redirect()->route('password.reset')->with([
-            'email' => $request->email,
-            'success' => 'A 5-digit reset code has been sent to your email.'
-        ]);
+        return response()->json(['message' => 'Mã khôi phục đã được gửi'], 200);
     }
 
-    // Show reset password form
+    // Hiển thị form đặt lại mật khẩu
     public function showResetForm()
     {
         return view('reset-password');
     }
 
-    // Handle password reset
+    // Đặt lại mật khẩu
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -255,93 +219,82 @@ class UserController extends Controller
             'password' => 'required|confirmed|min:6',
         ]);
 
-        // Validate the code
         $reset = PasswordReset::where('email', $request->email)
                               ->where('token', $request->code)
-                              ->where('created_at', '>=', Carbon::now()->subMinutes(30)) // Check if code is within 30 minutes
+                              ->where('created_at', '>=', Carbon::now()->subMinutes(30))
                               ->first();
 
         if (!$reset) {
-            return back()->withErrors(['code' => 'The code is invalid or expired.']);
+            return response()->json(['error' => 'Mã không hợp lệ hoặc đã hết hạn'], 400);
         }
 
-        // Update the user's password
-        User::where('email', $request->email)->update([
-            'password' => Hash::make($request->password),
-        ]);
-
-        // Delete the reset entry
+        User::where('email', $request->email)->update(['password' => Hash::make($request->password)]);
         PasswordReset::where('email', $request->email)->delete();
 
-        return redirect()->route('login')->with('success', 'Password has been reset successfully.');
+        return response()->json(['message' => 'Mật khẩu đã được đặt lại'], 200);
     }
 
-    //Register
+    // Đăng ký API
+
+    // Hiển thị form đăng ký
     public function showRegisterForm()
     {
         return view('register');
-    } public function showVerifyForm()
+    }
+
+    // Hiển thị form xác minh
+    public function showVerifyForm()
     {
         return view('verify');
     }
+
+    // Gửi mã xác thực đăng ký
     public function sendRegisterCode(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email|unique:users,email',
-        'name' => 'required',
-        'password' => 'required|min:6',
-    ]);
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'name' => 'required',
+            'password' => 'required|min:6',
+        ]);
 
-    // Tạo mã xác thực ngẫu nhiên
-    $code = rand(10000, 99999);
+        $code = rand(10000, 99999);
+        PasswordReset::updateOrCreate(['email' => $request->email], ['token' => $code, 'created_at' => Carbon::now()]);
 
-    // Lưu thông tin vào bảng password_resets
-    PasswordReset::updateOrCreate(
-        ['email' => $request->email],
-        ['token' => $code, 'created_at' => Carbon::now()]
-    );
+        Mail::send('register-code', ['code' => $code], function ($message) use ($request) {
+            $message->to($request->email);
+            $message->subject('Mã xác thực đăng ký tài khoản');
+        });
 
-    // Gửi mã xác thực qua email
-    Mail::send('register-code', ['code' => $code], function ($message) use ($request) {
-        $message->to($request->email);
-        $message->subject('Mã xác thực đăng ký tài khoản');
-    });
-
-    return redirect()->route('register.verify')->with([
-        'email' => $request->email,
-        'name' => $request->name,
-        'password' => $request->password,
-    ]);
-}
-public function verifyRegisterCode(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email|exists:password_resets,email',
-        'code' => 'required|numeric|digits:5',
-    ]);
-
-    // Kiểm tra mã xác thực
-    $reset = PasswordReset::where('email', $request->email)
-                          ->where('token', $request->code)
-                          ->where('created_at', '>=', Carbon::now()->subMinutes(30))
-                          ->first();
-
-    if (!$reset) {
-        return back()->withErrors(['code' => 'Mã xác thực không đúng hoặc đã hết hạn.']);
+        return response()->json(['message' => 'Mã xác thực đã được gửi'], 200);
     }
 
-    // Tạo tài khoản mới
-    User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-    ]);
+    // Xác minh mã xác thực và tạo tài khoản mới
+    public function verifyRegisterCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:password_resets,email',
+            'code' => 'required|numeric|digits:5',
+        ]);
 
-    // Xóa mã xác thực
-    PasswordReset::where('email', $request->email)->delete();
+        $reset = PasswordReset::where('email', $request->email)
+                              ->where('token', $request->code)
+                              ->where('created_at', '>=', Carbon::now()->subMinutes(30))
+                              ->first();
 
-    return redirect()->route('login')->with('success', 'Tài khoản đã được tạo thành công.');
-}
+        if (!$reset) {
+            return response()->json(['error' => 'Mã xác thực không đúng hoặc đã hết hạn'], 400);
+        }
+
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        PasswordReset::where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Tài khoản đã được tạo thành công'], 200);
+    }
 
 
 }
