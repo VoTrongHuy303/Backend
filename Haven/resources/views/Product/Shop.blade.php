@@ -17,7 +17,11 @@
         <form action="">
         @foreach ($categories as $item)
       
+<<<<<<< HEAD
           <input type="checkbox" name="category[]" value="{{$item->id}}" id="">{{$item->name}} <hr>
+=======
+          <input type="checkbox" name="category[]" value="{{$item->id}}" id="">{{$item->name}}
+>>>>>>> origin/TNghia
         
          
             
@@ -25,6 +29,7 @@
         Brands
 
         @foreach ($brands as $item)
+<<<<<<< HEAD
         <hr>
             <input type="checkbox" name="brand[]" value="{{$item->id}}" id="">{{$item->name}}
             
@@ -35,13 +40,32 @@
           <input type="checkbox" name="priceRanges[]" value="0-100" id="">0-100<hr>
           <input type="checkbox" name="priceRanges[]" value="100-200">100-200<hr>
           <input type="checkbox" name="priceRanges[]" value="200-300">200-300<hr>
+=======
+        
+            <input type="checkbox" name="brand[]" value="{{$item->id}}" id="">{{$item->name}}
+          
+           
+              
+          @endforeach
+>>>>>>> origin/TNghia
         <input type="submit" value="submit">
       </form>
 
 
         
       </div>
+<<<<<<< HEAD
     
+=======
+      <div>
+        <form action="">
+          <input type="checkbox" name="priceRanges[]" value="0-100" id="">0-100
+          <input type="checkbox" name="priceRanges[]" value="100-200">100-200
+          <input type="checkbox" name="priceRanges[]" value="200-300">200-300
+          <input type="submit" value="submit">
+        </form>
+      </div>
+>>>>>>> origin/TNghia
         <table class="table">
             <thead>
               <tr>

@@ -22,6 +22,10 @@ class Product extends Model
     {
         return $this->belongsTo(Brand::class);
     }
+    public function ProductImages()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
     public function product_variants()
     {
         return $this->hasMany(ProductVariant::class);
@@ -31,5 +35,6 @@ class Product extends Model
         return $this->product_variants()->count(); // Đếm số lượng flash sale products
     }
     protected $appends = ['ProductVariantCount'];
+    protected $with = ['ProductImages','category','Brand'];
  
 }

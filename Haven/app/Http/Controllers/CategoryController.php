@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use App\Models\Product;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,7 @@ class CategoryController extends Controller
         $search = $request->input('search');
         $categories = Category::when($search, function ($query, $search) {
             return $query->where('name', 'like', '%' . $search . '%');
-        })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
+        })->orderBy('id', 'desc')->paginate(10)->appends(request()->all());
 
         return response()->json([
             'success' => true,
@@ -38,7 +39,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('Category.store');
+        // return view('Category.store');
     }
 
     /**
@@ -78,7 +79,10 @@ class CategoryController extends Controller
      */
     public function show(category $category)
     {
-        //
+        return response()->json([
+            'success' => true,
+            'category' => $category
+        ], 200);
     }
 
     /**
@@ -86,16 +90,24 @@ class CategoryController extends Controller
      */
     public function edit(category $category)
     {
-        // return response()->json([
-        //     'success' => true,
-        //     'message' => 'Category đã được cập nhật thành công',
-        //     'Category' => $category
-        // ], 200);
-        return view('Category.edit',[
-            'category' => $category,
-        ]);
+        return response()->json([
+            'success' => true,
+            'Category' => $category
+        ], 200);
+        // return view('Category.edit',[
+        //     'category' => $category,
+        // ]);
     }
-
+    public function getProducts(category $category)
+    {
+        return response()->json([
+            'success' => true,
+            'products' => Product::where('category_id', $category->id)->paginate(10)
+        ], 200);
+        // return view('Category.edit',[
+        //     'category' => $category,
+        // ]);
+    }
     /**
      * Update the specified resource in storage.
      */

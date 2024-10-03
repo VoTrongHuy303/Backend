@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 
 class FlashSaleController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -23,25 +24,30 @@ class FlashSaleController extends Controller
         
         $flashSales = FlashSale::when($status === '0' || $status === '1', function ($query) use ($status) {
             return $query->where('status',  $status);
-        })->orderBy('id', 'desc')->paginate(1)->appends(request()->all());
+        })->orderBy('id', 'desc')->paginate(10)->appends(request()->all());
         // $flashSales = FlashSale::where('status',  $status)->get();
 
-        return view('FlashSale.home', [
-            'flashSales' => $flashSales ,
-        ]);
-        // return response()->json([
-        //     'flashSales' =>   $flashSales,
+        // return view('FlashSale.home', [
+        //     'flashSales' => $flashSales ,
         // ]);
+        return response()->json([
+            'flashSales' =>   $flashSales,
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
+
     public function create()
     {
-        return view('FlashSale.store', [
+        return response()->json([
+            'success' => true,
             'productVariants' => ProductVariant::where('stock', '>', 0)->get(),
-        ]);
+        ], 200);
+        // return view('FlashSale.store', [
+        //     'productVariants' => ProductVariant::where('stock', '>', 0)->get(),
+        // ]);
     }
 
     /**
@@ -49,7 +55,7 @@ class FlashSaleController extends Controller
      */
     public function store(StoreFlashSaleRequest $request)
     {
-        // Done-Thời gian bắt đầu (Start Time): Cần đảm bảo rằng thời gian bắt đầu của chương trình Flash V-Sale phải là sau thời gian hiện tại và không được ở trong quá khứ.
+        // Done-Thời gian bắt đầu (Start Time): Cần đảm bảo rằng thời gian bắt đầu của chương trình Flash Sale phải là sau thời gian hiện tại và không được ở trong quá khứ.
         // Done-Thời gian kết thúc (End Time): Thời gian kết thúc phải sau thời gian bắt đầu và không thể kết thúc trước thời gian bắt đầu.
         // Done-Không xung đột với các khuyến mãi khác: Đảm bảo rằng Flash Sale không mâu thuẫn hoặc chồng chéo với các chương trình khuyến mãi khác để tránh nhầm lẫn về giá.
         // Done-Sản phẩm duy nhất: Đảm bảo rằng một sản phẩm không tham gia nhiều Flash Sale cùng lúc.
@@ -105,6 +111,7 @@ class FlashSaleController extends Controller
                     ];
                 }
             }
+
             if ($overStockFlashSaleProducts) {
                 return response()->json([
                     'success' => false,
@@ -166,9 +173,23 @@ class FlashSaleController extends Controller
      */
     public function show(FlashSale $flashSale)
     {
-        //
+        
+        return response()->json([
+            'success' => true,
+            'flashSale' => $flashSale
+        ], 200);
     }
-
+    public function getProductVariants(FlashSale $flashSale)
+    {
+        $productVariantobj = new ProductVariant();
+        return response()->json([
+            'success' => true,
+            'FlashsaleProducts' => ProductVariant::whereHas('flashSales', function($query) use ($flashSale) {
+                $query->where('flash_sale_id', $flashSale->id);
+            })->get(),
+        ], 200);
+    }
+    
     /**
      * Show the form for editing the specified resource.
      */
@@ -177,16 +198,17 @@ class FlashSaleController extends Controller
         //chỉ hiển thị sản phẩm còn hàng trong khi chỉnh sửa flash sale vì trong input select chỉ hiển thị sản phẩm còn hàng để chọn thôi
         $productVariantFlashSales = $flashsale->productVariants->where('stock', '>', 0);
         // dd($productVariants);
-        // return response()->json([
-        //     'success' => true,
-        //     'message' => 'Category đã được cập nhật thành công',
-        //     'data' => $productVariants
-        // ], 200);
-        return view('FlashSale.edit', [
+        return response()->json([
+            'success' => true,
             'flashSale' => $flashsale,
             'productVariantFlashSales' => $productVariantFlashSales,
             'productVariants' => ProductVariant::where('stock', '>', 0)->get()
-        ]);
+        ], 200);
+        // return view('FlashSale.edit', [
+        //     'flashSale' => $flashsale,
+        //     'productVariantFlashSales' => $productVariantFlashSales,
+        //     'productVariants' => ProductVariant::where('stock', '>', 0)->get()
+        // ]);
     }
 
     /**
@@ -322,6 +344,21 @@ class FlashSaleController extends Controller
      */
     public function destroy(FlashSale $flashsale)
     {
-        $flashsale->delete();
+        try {
+            $flashsale->delete();
+            
+            // Return a success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Flash sale đã được xóa thành công',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Xảy ra lỗi trong quá trình xóa',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+        
     }
 }

@@ -11,7 +11,7 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::all();
-        return view('roles.index', compact('roles'));
+        return response()->json($roles, 200);
     }
 
     // Hiển thị form tạo Role
@@ -27,18 +27,18 @@ class RoleController extends Controller
             'name' => 'required|string|max:255|unique:roles,name',
         ]);
 
-        Role::create([
+        $role = Role::create([
             'name' => $request->name,
         ]);
 
-        return redirect()->route('roles.index')->with('success', 'Role created successfully!');
+        return response()->json(['message' => 'Role created successfully!', 'role' => $role], 201);
     }
 
 
     // Hiển thị thông tin Role
     public function show(Role $role)
     {
-        return view('roles.show', compact('role'));
+        return response()->json($role, 200);
     }
 
     // Hiển thị form chỉnh sửa Role
@@ -58,14 +58,14 @@ class RoleController extends Controller
             'name' => $request->name,
         ]);
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully!');
+        return response()->json(['message' => 'Role updated successfully!', 'role' => $role], 200);
     }
 
-    // Xóa Role
+    // Xóa Role (API)
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('roles.index')->with('success', 'Role deleted successfully!');
+        return response()->json(['message' => 'Role deleted successfully!'], 200);
     }
 }
 

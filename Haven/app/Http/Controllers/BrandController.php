@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Http\Requests\StoreBrandRequest;
 use App\Http\Requests\UpdateBrandRequest;
+use App\Models\Product;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
@@ -19,19 +20,19 @@ class BrandController extends Controller
             return $query->where('name', 'like', '%' . $search . '%');
         })->orderBy('id', 'desc')->paginate(1)->appends(request()->all());
 
-        // return response()->json([
-        //     'success' => true,
-        //     'brands' => $brands,
-        // ], 200);
-        return view('Brand.home', [
-            'Brands' => $brands,
-        ]);
+        return response()->json([
+            'success' => true,
+            'brands' => $brands,
+        ], 200);
+        // return view('Brand.home', [
+        //     'Brands' => $brands,
+        // ]);
     }
 
   
     public function create()
     {
-        return view('Brand.store');
+        // return view('Brand.store');
     }
 
     public function store(StoreBrandRequest $request)
@@ -66,20 +67,30 @@ class BrandController extends Controller
    
     public function show(Brand $brand)
     {
-        
+        return response()->json([
+            'success' => true,
+            'brand' => $brand
+        ], 200);
     }
-
+    public function getProducts(Brand $brand)
+    {
+        return response()->json([
+            'success' => true,
+            'products' => Product::where('brand_id',$brand->id)->paginate(10),
+        ], 200);
+    }
+    
    
 
     public function edit(Brand $brand)
     {
-        // return response()->json([
-        //     'success' => true,
-        //     'brand' => $brand
-        // ], 200);
-        return view('Brand.edit', [
-            'brand' => $brand,
-        ]);
+        return response()->json([
+            'success' => true,
+            'brand' => $brand
+        ], 200);
+        // return view('Brand.edit', [
+        //     'brand' => $brand,
+        // ]);
     }
 
   
@@ -153,7 +164,6 @@ class BrandController extends Controller
             ], 500);
         }
 
-        return redirect()->back();
     }
 
 }

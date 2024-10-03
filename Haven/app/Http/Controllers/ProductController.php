@@ -33,10 +33,7 @@ class ProductController extends Controller
             'Featured'   => ProductVariant::orderBy('view', 'desc')->get(),
             ]);
         
-        // $search = $request->input('search');
-        // $products = Product::when($search, function ($query, $search) {
-        //     return $query->where('name', 'like', '%' . $search . '%');
-        // })->orderBy('id', 'desc')->paginate(5)->appends(request()->all());
+        
 
         // return view('Product.home', [
         //     'products' =>   $products,
@@ -45,12 +42,7 @@ class ProductController extends Controller
         //     // 'category_id' => $category_id
         // ]);
 
-        // return response()->json([
-        //   'product' =>   $products,
-        //     // 'categories' => $categories::orderBy('id', 'desc')->get(),
-        //     // 'brands' => $brands::orderBy('id', 'desc')->get(),
-        //     // 'category_id' => $category_id
-        // ]);
+       
     }
 
     public function shop(Request $request)
@@ -106,14 +98,14 @@ class ProductController extends Controller
     {
         $brands = new Brand();
         $categories = new Category();
-        // return response()->json([
-        //     'categories' => $categories::orderBy('id', 'desc')->get(),
-        //     'brands' => $brands::orderBy('id', 'desc')->get(),
-        // ]);  
-        return view('Product.store', [
+        return response()->json([
             'categories' => $categories::orderBy('id', 'desc')->get(),
             'brands' => $brands::orderBy('id', 'desc')->get(),
-        ]);    
+        ]);  
+        // return view('Product.store', [
+        //     'categories' => $categories::orderBy('id', 'desc')->get(),
+        //     'brands' => $brands::orderBy('id', 'desc')->get(),
+        // ]);    
     }
 
     /**
@@ -125,7 +117,7 @@ class ProductController extends Controller
         try {
           
         $product = new Product();
-        $product->fill($request->except('tag'));
+        $product->fill($request->all());
         $product->name = $request->name_product;
         $product->save();
         $productId = $product->id;
@@ -191,7 +183,7 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ProductVariant $productVariant)
+    public function detail(ProductVariant $productVariant)
     {
         $productVariant->view =+ 1; 
         $productVariant->update();
@@ -208,6 +200,25 @@ class ProductController extends Controller
         //     'product' => $productVariant->product,
         // ]);
     }
+
+    public function show(Product $product)
+    {
+    
+        return response()->json([
+            'success' => true,
+            '$product' => $product
+            ]);
+    }
+
+    public function getProductVariants(Product $product)
+    {
+    
+        return response()->json([
+            'success' => true,
+            'productVariants' => ProductVariant::where('product_id', $product->id)->paginate(10),
+            ]);
+    }
+    
     public function home()
     {
         return response()->json([
@@ -230,20 +241,20 @@ class ProductController extends Controller
         $variants = ProductVariant::where('product_id',$product->id)->get();
         
 
-        // return response()->json([
-        //     'product' => $product,
-        //     'categories' => $categories::orderBy('id', 'desc')->get(),
-        //     'brands' => $brands::orderBy('id', 'desc')->get(),
-        //     'productImages' => ProductImage::where('product_id',$product->id)->get(),
-        //     'variants' =>$variants
-        // ]);
-        return view('Product.edit', [
+        return response()->json([
             'product' => $product,
             'categories' => $categories::orderBy('id', 'desc')->get(),
             'brands' => $brands::orderBy('id', 'desc')->get(),
             'productImages' => ProductImage::where('product_id',$product->id)->get(),
             'variants' =>$variants
         ]);
+        // return view('Product.edit', [
+        //     'product' => $product,
+        //     'categories' => $categories::orderBy('id', 'desc')->get(),
+        //     'brands' => $brands::orderBy('id', 'desc')->get(),
+        //     'productImages' => ProductImage::where('product_id',$product->id)->get(),
+        //     'variants' =>$variants
+        // ]);
     }
 
     /**
@@ -253,7 +264,7 @@ class ProductController extends Controller
     {
        
         try {
-            $product->fill($request->except('tag'));
+            $product->fill($request->all());
             $product->name = $request->name_product;
             $product->update();
     
