@@ -13,6 +13,11 @@ use App\Http\Controllers\ProductController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::group(['prefix' => 'api/users', 'middleware' => ['auth', 'checkRole:admin']], function() {
+    // Các route chỉ dành cho admin
+    
+});
 // Quản lý roles
 Route::resource('roles', RoleController::class);
 // Quản lý users
