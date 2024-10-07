@@ -14,6 +14,10 @@ Route::resource('roles', RoleController::class);
 // Quản lý users
 Route::resource('api/roles', RoleController::class);
 
+Route::group(['prefix' => 'api/users', 'middleware' => ['auth', 'checkRole:admin']], function() {
+    // Các route chỉ dành cho admin
+
+});
 // Quản lý users
 Route::group(['prefix' => 'api/users'], function() {
     Route::get('/', [UserController::class, 'index'])->name('users.index');
