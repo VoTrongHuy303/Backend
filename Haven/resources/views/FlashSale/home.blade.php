@@ -9,39 +9,50 @@
 </head>
 <body>
     <div class="container mt-5">
-      <form action="">
-        <input type="search" name="search">
+      <form action="{{ route('FlashSale.index') }}" method="GET">
+       <select name="status" id="status">
+        <option value="">All</option>
+        <option value="1">Active</option>
+        <option value="0">In Active</option>
+       </select>
+       <input type="submit">
       </form>
         <table class="table">
             <thead>
               <tr>
                 <th scope="col">#id</th>
-                <th scope="col">name</th>
-                <th scope="col">image</th>
+                <th scope="col">start time</th>
+                <th scope="col">end time</th>
+                <th scope="col">status</th>
                 <th scope="col">action</th>
               </tr>
             </thead>
             <tbody>
-                @foreach ($Brands as $item)
+                @foreach ($flashSales as $item)
                 <tr>
+
                     <th scope="row">{{$item->id}}</th>
-                    <td>{{$item->name}}</td>
-                    <td><img src="{{$item->image}}" alt="" style="width: 50px; height: 50px" width="50px" height="50px"></td>
-                    <td><a href="{{route('Brand.edit',['brand' => $item->id])}}" class="btn btn-primary">Edit</a>
-                      <form action="{{ route('Brand.delete', $item) }}" method="post">
-    
+                    <td>{{$item->start_time}}</td>
+                    <td>{{$item->end_time}}</td>
+                    <td>{{$item->StatusName}}</td>
+                    <td><a href="{{ route('FlashSale.edit',['flashsale' => $item]) }}" class="btn btn-primary">edit</a>
+                    
+                      <form action="{{  route('FlashSale.delete',$item)  }}" method="post">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-danger">Delete</button>
                       </form>
                     </span>
-                      {{-- <a href="{{route('delete',['product' => $item->id])}}" class="btn btn-primary">delete</a> --}}
+                     
                     </td>
                   </tr>
-                @endforeach
+                    </td>
+                  </tr>
+                @endforeach 
             </tbody>
           </table>
-          {{ $Brands ->links() }}
+        
+          {{ $flashSales->links() }}
 
     </div>
 </body>

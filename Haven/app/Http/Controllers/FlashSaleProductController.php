@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product_variant;
-use App\Http\Requests\StoreProduct_variantRequest;
-use App\Http\Requests\UpdateProduct_variantRequest;
-use App\Models\ProductVariant;
+use App\Models\FlashSaleProduct;
+use App\Http\Requests\StoreFlashSaleProductRequest;
+use App\Http\Requests\UpdateFlashSaleProductRequest;
 
-class ProductVariantController extends Controller
+class FlashSaleProductController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -28,7 +27,7 @@ class ProductVariantController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProduct_variantRequest $request)
+    public function store(StoreFlashSaleProductRequest $request)
     {
         //
     }
@@ -36,18 +35,15 @@ class ProductVariantController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ProductVariant $productVariant)
+    public function show(FlashSaleProduct $flashSaleProduct)
     {
-        return response()->json([
-            'success' => true,
-            'product' => $productVariant
-            ]);
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProductVariant $productVariant)
+    public function edit(FlashSaleProduct $flashSaleProduct)
     {
         //
     }
@@ -55,7 +51,7 @@ class ProductVariantController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProduct_variantRequest $request, ProductVariant $productVariant)
+    public function update(UpdateFlashSaleProductRequest $request, FlashSaleProduct $flashSaleProduct)
     {
         //
     }
@@ -63,7 +59,7 @@ class ProductVariantController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductVariant $productVariant)
+    public function destroy(FlashSaleProduct $flashSaleProduct)
     {
         //
     }

@@ -5,24 +5,19 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductVariantController;
 
-
-
-// Routes từ nhánh HEAD
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::group(['prefix' => 'api/users', 'middleware' => ['auth', 'checkRole:admin']], function() {
-    // Các route chỉ dành cho admin
-    
-});
 // Quản lý roles
 Route::resource('roles', RoleController::class);
 // Quản lý users
 Route::resource('api/roles', RoleController::class);
 
+Route::group(['prefix' => 'api/users', 'middleware' => ['auth', 'checkRole:admin']], function() {
+    // Các route chỉ dành cho admin
+
+});
 // Quản lý users
 Route::group(['prefix' => 'api/users'], function() {
     Route::get('/', [UserController::class, 'index'])->name('users.index');
@@ -66,14 +61,25 @@ route::group([
     'prefix' => 'api/product'
 ],function(){
     Route::get('/', [ProductController::class, 'index'])->name('Product.index');
+    Route::get('/home', [ProductController::class, 'home'])->name('Product.home');
     Route::get('/create', [ProductController::class, 'create'])->name('Product.create');
     Route::post('/store', [ProductController::class, 'store'])->name('Product.store');
-    Route::get('/show/{productVariant}', [ProductController::class, 'show'])->name('Product.show');
+    Route::get('/detail/{productVariant}', [ProductController::class, 'detail'])->name('Product.detail');
     Route::get('/shop', [ProductController::class, 'shop'])->name('Product.shop');
     Route::get('/edit/{product}', [ProductController::class, 'edit'])->name('Product.edit');
     Route::put('/update/{product}', [ProductController::class, 'update'])->name('Product.update');
     Route::delete('/delete/{product}', [ProductController::class, 'destroy'])->name('Product.delete');
-    Route::get('/getProductByTag/{tag}', [ProductController::class, 'getProductByTag'])->name('Product.getProductByTag');
+    Route::get('/show/{product}', [ProductController::class, 'show'])->name('Product.show');
+    Route::get('/getproductvariants/{product}', [ProductController::class, 'getProductVariants'])->name('Product.getProductVariant');
+
+});
+route::group([
+    'prefix' => 'api/productvariant'
+],function(){
+
+    Route::get('/show/{productVariant}', [ProductVariantController::class, 'show'])->name('ProductVariant.show');
+
+ 
 });
 
 route::group([
@@ -85,7 +91,9 @@ route::group([
     Route::get('/edit/{category}', [CategoryController::class, 'edit'])->name('Category.edit');
     Route::put('/update/{category}', [CategoryController::class, 'update'])->name('Category.update');
     Route::delete('/delete/{category}', [CategoryController::class, 'destroy'])->name('Category.delete');
-    Route::get('/getCategoryByTag/{tag}', [CategoryController::class, 'getCategoryByTag'])->name('Category.getCategoryByTag');
+    Route::get('/show/{category}', [CategoryController::class, 'show'])->name('Category.show');
+    Route::get('/getproducts/{category}', [CategoryController::class, 'getProducts'])->name('Category.getProduct');
+    Route::get('/getCategoryByTag/{tag}', [CategoryController::class, 'getCategoryByTag'])->name('Category.getProductByTag');
 });
 
 route::group([
@@ -97,9 +105,19 @@ route::group([
     Route::get('/edit/{brand}', [BrandController::class, 'edit'])->name('Brand.edit');
     Route::put('/update/{brand}', [BrandController::class, 'update'])->name('Brand.update');
     Route::delete('/delete/{brand}', [BrandController::class, 'destroy'])->name('Brand.delete');
-    Route::get('/getBrandByTag/{tag}', [BrandController::class, 'getBrandByTag'])->name('Brand.getBrandByTag');
+    Route::get('/show/{brand}', [BrandController::class, 'show'])->name('Brand.show');
+    Route::get('/getproducts/{brand}', [BrandController::class, 'getProducts'])->name('Brand.getProduct');
+    Route::get('/getBrandByTag/{tag}', [BrandController::class, 'getBrandByTag'])->name('Brand.getProductByTag');
 });
-
-Route::get('/csrf-token', function () {
-    return response()->json(['csrf_token' => csrf_token()]);
+route::group([
+    'prefix' => 'api/flashsale',
+],function(){
+    Route::get('/', [FlashSaleController::class, 'index'])->name('FlashSale.index');
+    Route::get('/create', [FlashSaleController::class, 'create'])->name('FlashSale.create');
+    Route::post('/store', [FlashSaleController::class, 'store'])->name('FlashSale.store');
+    Route::get('/edit/{flashsale}', [FlashSaleController::class, 'edit'])->name('FlashSale.edit');
+    Route::put('/update/{flashsale}', [FlashSaleController::class, 'update'])->name('FlashSale.update');
+    Route::delete('/delete/{flashsale}', [FlashSaleController::class, 'destroy'])->name('FlashSale.delete');
+    Route::get('/show/{flashSale}', [FlashSaleController::class, 'show'])->name('FlashSale.show');
+    Route::get('/getproductvariants/{flashSale}', [FlashSaleController::class, 'getProductVariants'])->name('Product.getProductVariants');
 });
