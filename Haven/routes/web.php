@@ -7,7 +7,9 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductVariantController;
+use App\Models\ProductImage;
 
 // Quản lý roles
 Route::resource('roles', RoleController::class);
@@ -76,10 +78,19 @@ route::group([
 route::group([
     'prefix' => 'api/productvariant'
 ],function(){
-
+    Route::get('/create', [ProductVariantController::class, 'create'])->name('ProductVariant.create');
+    Route::post('/store', [ProductVariantController::class, 'store'])->name('ProductVariant.store');
     Route::get('/show/{productVariant}', [ProductVariantController::class, 'show'])->name('ProductVariant.show');
+    Route::get('/edit/{productVariant}', [ProductVariantController::class, 'edit'])->name('ProductVariant.edit');
+    Route::put('/update/{productVariant}', [ProductVariantController::class, 'update'])->name('ProductVariant.update');
+    Route::delete('/delete/{productVariant}', [ProductVariantController::class, 'destroy'])->name('ProductVariant.delete');
+});
 
- 
+route::group([
+    'prefix' => 'api/productimage'
+],function(){
+
+    Route::delete('/delete/{productImage}', [ProductImageController::class, 'destroy'])->name('ProductImage.delete');
 });
 
 route::group([
@@ -95,6 +106,7 @@ route::group([
     Route::get('/getproducts/{category}', [CategoryController::class, 'getProducts'])->name('Category.getProduct');
     Route::get('/getCategoryByTag/{tag}', [CategoryController::class, 'getCategoryByTag'])->name('Category.getProductByTag');
 });
+
 
 route::group([
     'prefix' => 'api/brand',
