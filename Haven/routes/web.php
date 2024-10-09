@@ -9,6 +9,7 @@ use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\FavoriteController;
 use App\Models\ProductImage;
 
 // Quản lý roles
@@ -132,4 +133,12 @@ route::group([
     Route::delete('/delete/{flashsale}', [FlashSaleController::class, 'destroy'])->name('FlashSale.delete');
     Route::get('/show/{flashSale}', [FlashSaleController::class, 'show'])->name('FlashSale.show');
     Route::get('/getproductvariants/{flashSale}', [FlashSaleController::class, 'getProductVariants'])->name('Product.getProductVariants');
+});
+
+
+route::group([
+    'prefix' => 'api/favorite', 'middleware'=>'auth'
+],function(){
+    Route::get('/', [FavoriteController::class, 'index'])->name('Favorite.index');
+    Route::post('/store', [FavoriteController::class, 'store']);
 });
