@@ -7,6 +7,7 @@ use App\Http\Requests\CartRequest;
 use App\Http\Requests\CartUpdateRequest;
 use App\Models\Cart;
 use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
@@ -17,9 +18,9 @@ class CartController extends Controller
         $productVariant = ProductVariant::findOrFail($request->product_variant_id);
         $quantity = $request->quantity ?? 1;
 
-        if (auth()->check()) {
+        if (Auth::check()) { 
             // Người dùng đã đăng nhập -> thêm sản phẩm vào giỏ hàng trong database
-            $cartItem = Cart::where('user_id', auth()->id())
+            $cartItem = Cart::where('user_id', Auth::user()->id)
                             ->where('product_variant_id', $productVariant->id)
                             ->first();
             if ($cartItem) {
@@ -29,7 +30,7 @@ class CartController extends Controller
             } else {
                 // Nếu sản phẩm chưa có -> thêm mới vào giỏ hàng
                 Cart::create([
-                    'user_id' => auth()->id(),
+                    'user_id' => Auth::user()->id,
                     'product_variant_id' => $productVariant->id,
                     'quantity' => $quantity,
                 ]);
@@ -60,9 +61,9 @@ class CartController extends Controller
     // Hiển thị giỏ hàng
     public function showCart()
 {
-    if (auth()->check()) {
+    if (Auth::check()) {
         // Người dùng đã đăng nhập -> lấy giỏ hàng từ database
-        $cartItems = Cart::where('user_id', auth()->id())->with('productVariant')->get();
+        $cartItems = Cart::where('user_id', Auth::user()->id)->with('productVariant')->get();
     } else {
         // Người dùng chưa đăng nhập -> lấy giỏ hàng từ session
         $cart = Session::get('cart', []);
@@ -75,12 +76,12 @@ class CartController extends Controller
         // Tạo cấu trúc giỏ hàng tương tự như khi người dùng đã đăng nhập
         $cartItems = $productVariants->map(function ($productVariant) use ($cart) {
             return [
-                'id' => null, // Không có ID vì không lưu vào database
-                'product_variant_id' => $productVariant->id,
-                'user_id' => null, // Không có user_id vì chưa đăng nhập
-                'quantity' => $cart[$productVariant->id], // Số lượng từ session
-                'created_at' => now(), // Thời gian hiện tại
-                'updated_at' => now(), // Thời gian hiện tại
+                // 'id' => null, // Không có ID vì không lưu vào database
+                // 'product_variant_id' => $productVariant->id,
+                // 'user_id' => null, // Không có user_id vì chưa đăng nhập
+                // 'quantity' => $cart[$productVariant->id], // Số lượng từ session
+                // 'created_at' => now(), // Thời gian hiện tại
+                // 'updated_at' => now(), // Thời gian hiện tại
                 'product_variant' => $productVariant, // Load đầy đủ thông tin product_variant
             ];
         });
@@ -92,8 +93,8 @@ class CartController extends Controller
 public function deleteCart($productVariantId)
 {
     // Kiểm tra nếu người dùng đã đăng nhập
-    if (auth()->check()) {
-        $user = auth()->user();
+    if (Auth::check()) {
+        $user = Auth::user();
 
         // Tìm sản phẩm trong giỏ hàng của người dùng
         $cartItem = Cart::where('user_id', $user->id)
@@ -130,9 +131,9 @@ public function deleteCart($productVariantId)
 
 public function clearCart()
 {
-    if (auth()->check()) {
+    if (Auth::check()) {
         // Xóa toàn bộ giỏ hàng của người dùng đã đăng nhập
-        Cart::where('user_id', auth()->id())->delete();
+        Cart::where('user_id', Auth::user()->id)->delete();
         return response()->json(['message' => 'Cart cleared successfully'], 200);
     } else {
         // Xóa giỏ hàng trong session của người dùng chưa đăng nhập
@@ -147,9 +148,9 @@ public function updateCart(CartUpdateRequest $request, $productVariantId)
     $newQuantity = $request->input('quantity');
 
     // Kiểm tra người dùng đã đăng nhập hay chưa
-    if (auth()->check()) {
+    if (Auth::check()) {
         // Cập nhật số lượng trong giỏ hàng database cho người dùng đã đăng nhập
-        $cartItem = Cart::where('user_id', auth()->id())
+        $cartItem = Cart::where('user_id', Auth::user()->id)
             ->where('product_variant_id', $productVariantId)
             ->first();
 
@@ -181,8 +182,8 @@ public function cartTotal()
     $total = 0;
 
     // Kiểm tra người dùng đã đăng nhập
-    if (auth()->check()) {
-        $cartItems = Cart::where('user_id', auth()->id())->get();
+    if (Auth::check()) {
+        $cartItems = Cart::where('user_id', Auth::user()->id)->get();
         
         foreach ($cartItems as $item) {
             $total += $item->quantity * $item->productVariant->price;

@@ -5,20 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FavoriteRequest;
 use App\Models\Favorite;
 use App\Models\ProductVariant;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
-
+    
     public function index(){
         // Lấy danh sách sản phẩm yêu thích của user hiện tại 
-        $favorites = Favorite::where('user_id', auth()->id())->with('productVariant')->get();
+        $favorites = Favorite::where('user_id', Auth::user()->id)->with('productVariant')->get();
         return response()->json($favorites);
     }
 
     public function store(FavoriteRequest $request)
 {
     try {
-    $userId = auth()->id();
+    $userId = Auth::user()->id;
     $productVariantId = $request->input('product_variant_id');
 
     // Kiểm tra xem mẫu mã sản phẩm đã có trong mục yêu thích chưa
