@@ -11,12 +11,13 @@ class FavoriteController extends Controller
 
     public function index(){
         // Lấy danh sách sản phẩm yêu thích của user hiện tại 
-        $favorites = Favorite::where('user_id', auth()->id())->get();
+        $favorites = Favorite::where('user_id', auth()->id())->with('productVariant')->get();
         return response()->json($favorites);
     }
 
     public function store(FavoriteRequest $request)
 {
+    try {
     $userId = auth()->id();
     $productVariantId = $request->input('product_variant_id');
 
@@ -37,6 +38,14 @@ class FavoriteController extends Controller
         ]);
         return response()->json($favorite, 201); // Created (success)
     }
+    } catch (\Exception $e) {
+        return response()->json([   
+            'success' => false,
+            'message' => 'Xảy ra lỗi trong quá trình yêu thích',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+    
 }
 
 }

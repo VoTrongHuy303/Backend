@@ -63,6 +63,11 @@ class ProductVariant extends Model
         // Nếu không có flash sale hoặc không có giảm giá thì trả về giá gốc
         return $this->price;
     }
+
+    public function Cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
     
     protected $appends = ['DiscountedPrice','FlashSalePrice','StatusStock'];
     protected $with = ['flashSales','product'];
