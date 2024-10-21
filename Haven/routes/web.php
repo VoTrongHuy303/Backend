@@ -163,6 +163,7 @@ route::group([
 ],function(){
     Route::get('/', [CartController::class, 'showCart'])->name('Cart.index');
     Route::get('/total', [CartController::class, 'cartTotal']);
+    Route::get('/point', [CartController::class, 'cartPoint']);
     Route::post('/add', [CartController::class, 'addToCart']);
     Route::put('/update/{productVariantId}', [CartController::class, 'updateCart']);
     Route::delete('/delete/{productVariantId}', [CartController::class, 'deleteCart']);

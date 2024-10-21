@@ -12,8 +12,12 @@ class FavoriteController extends Controller
     
     public function index(){
         // Lấy danh sách sản phẩm yêu thích của user hiện tại 
-        $favorites = Favorite::where('user_id', Auth::user()->id)->with('productVariant')->get();
+        $favorites = Favorite::where('user_id', Auth::user()->id)->with('productVariant')->paginate(20);
+        if($favorites->isEmpty()){
+            return response()->json(['message' => 'No favorite products'], 404); 
+        }
         return response()->json($favorites);
+        
     }
 
     public function store(FavoriteRequest $request)
@@ -30,7 +34,7 @@ class FavoriteController extends Controller
     if ($favorite) {
         // Nếu có thì xóa
         $favorite->delete();
-        return response()->json(null, 204); // No content (success)
+        return response()->json(['message' => 'Unfavorite product successfully'], 204); // No content (success)
     } else {
         // Không thì thêm
         $favorite = Favorite::create([

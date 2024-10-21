@@ -87,6 +87,10 @@ class CartController extends Controller
         });
     }
 
+    if($cartItems->isEmpty()){
+        return response()->json(['message' => 'Cart is empty'], 404);
+    }
+
     return response()->json($cartItems);
 }
 
@@ -201,5 +205,15 @@ public function cartTotal()
     return response()->json(['total' => $total], 200);
 }
 
+public function cartPoint(){
+    if (Auth::check()) {
+        $user = Auth::user();
+        $points = $user->point;
+    } else {
+        $points = 0; // Điểm tích lũy mặc định là 0
+    }
 
+return response()->json(['point' => $points], 200);
+
+}
 }
