@@ -20,7 +20,7 @@ class FavoriteController extends Controller
     $favorites = Favorite::where('user_id', $userId)->with('productVariant')->paginate(20);
     
     if ($favorites->isEmpty()) {
-        return response()->json(['message' => 'No favorite products'], 404); 
+        return response()->json(['message' => 'No favorite products'], null); 
     }
 
     // Trả về danh sách productVariant từ các yêu thích
