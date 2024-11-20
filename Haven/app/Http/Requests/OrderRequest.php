@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StoreProductRequest extends FormRequest
+class OrderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,26 +24,13 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name_product' => 'required|string|max:255', 
-            'images' => 'required|array|',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            'name' => 'required|array|',
-            'name.*' => 'string', // Tên sản phẩm bắt buộc
-            'price' => 'required|array|', // Giá sản phẩm là số và >= 0
-            'price.*' => 'required|numeric|min:0',
+            'full_name' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email',
+            'address' => 'required|string',
+            'payment_method' => 'required|string',
             
-            'stock' => 'required|array|', 
-            'stock.*' => 'integer|min:0',// Số lượng sản phẩm là số nguyên không âm
-            'variant_value' => 'required|array',
-            'variant_value.*' => 'string', 
-            'description' => 'required|string|', // Mô tả có thể rỗng
-            'image' => 'required|array|',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Ảnh phải là file hình hợp lệ với dung lượng tối đa 2MB
-            'category_id' => 'required|exists:categories,id', // ID danh mục bắt buộc, phải tồn tại trong bảng categories
-            'brand_id' => 'required|exists:brands,id', // ID thương hiệu có thể rỗng, nếu có phải tồn tại trong bảng brands
-           
-            'discount' => 'required|array|', 
-            'discount.*' => 'numeric|min:0|max:100'// Thông tin giảm giá phải là kiểu boolean
+        
         ];
     }
 

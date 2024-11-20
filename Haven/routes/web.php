@@ -7,13 +7,24 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FlashSaleController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\FlashSaleProductController;
+use App\Models\ProductImage;
 
 // Quản lý roles
 Route::resource('roles', RoleController::class);
 // Quản lý users
 Route::resource('api/roles', RoleController::class);
 
+Route::group(['prefix' => 'api/users', 'middleware' => ['auth', 'checkRole:admin']], function() {
+    // Các route chỉ dành cho admin
+
+});
 // Quản lý users
 Route::group(['prefix' => 'api/users'], function() {
     Route::get('/', [UserController::class, 'index'])->name('users.index');
@@ -72,10 +83,20 @@ route::group([
 route::group([
     'prefix' => 'api/productvariant'
 ],function(){
-
+    Route::get('/', [ProductVariantController::class, 'index'])->name('ProductVariant.index');
+    Route::get('/create', [ProductVariantController::class, 'create'])->name('ProductVariant.create');
+    Route::post('/store', [ProductVariantController::class, 'store'])->name('ProductVariant.store');
     Route::get('/show/{productVariant}', [ProductVariantController::class, 'show'])->name('ProductVariant.show');
+    Route::get('/edit/{productVariant}', [ProductVariantController::class, 'edit'])->name('ProductVariant.edit');
+    Route::put('/update/{productVariant}', [ProductVariantController::class, 'update'])->name('ProductVariant.update');
+    Route::delete('/delete/{productVariant}', [ProductVariantController::class, 'destroy'])->name('ProductVariant.delete');
+});
 
- 
+route::group([
+    'prefix' => 'api/productimage'
+],function(){
+    Route::post('/store', [ProductImageController::class, 'store'])->name('ProductImage.store');
+    Route::delete('/delete/{productImage}', [ProductImageController::class, 'destroy'])->name('ProductImage.delete');
 });
 
 route::group([
@@ -91,6 +112,7 @@ route::group([
     Route::get('/getproducts/{category}', [CategoryController::class, 'getProducts'])->name('Category.getProduct');
     Route::get('/getCategoryByTag/{tag}', [CategoryController::class, 'getCategoryByTag'])->name('Category.getProductByTag');
 });
+
 
 route::group([
     'prefix' => 'api/brand',
@@ -116,4 +138,57 @@ route::group([
     Route::delete('/delete/{flashsale}', [FlashSaleController::class, 'destroy'])->name('FlashSale.delete');
     Route::get('/show/{flashSale}', [FlashSaleController::class, 'show'])->name('FlashSale.show');
     Route::get('/getproductvariants/{flashSale}', [FlashSaleController::class, 'getProductVariants'])->name('Product.getProductVariants');
+    Route::get('/getlistflashsale', [FlashSaleController::class, 'listFlashSale'])->name('FlashSale.listFlashSale');
+    Route::get('/getProductNotInFlashSale/{flashsale}', [FlashSaleController::class, 'getProductsNotInFlashSale'])->name('FlashSale.editProductVariants');
+});
+
+route::group([
+    'prefix' => 'api/flashsaleproduct',
+],function(){
+    Route::post('/store', [FlashSaleProductController::class, 'store'])->name('FlashSale.store');
+    Route::get('/edit/{flashSaleProduct}', [FlashSaleProductController::class, 'edit'])->name('FlashSale.edit');
+    Route::put('/update/{flashSaleProduct}', [FlashSaleProductController::class, 'update'])->name('FlashSale.update');
+    Route::delete('/delete/{flashSaleProduct}', [FlashSaleProductController::class, 'destroy'])->name('FlashSale.delete');
+  
+ 
+});
+Route::group(['prefix' => 'api/favorite'], function() {
+        // Route::get('/', [FavoriteController::class, 'index'])->name('Favorite.index');
+    Route::post('/store', [FavoriteController::class, 'store']);
+});
+
+Route::group(['prefix' => 'api/userfavorite'], function() {
+    Route::get('/{userId}', [FavoriteController::class, 'index'])->name('Favorite.index');
+});
+
+
+route::group([
+    'prefix' => 'api/cart'
+],function(){
+    Route::get('/{userId}', [CartController::class, 'showCart'])->name('Cart.index'); //lấy danh sách giỏ hàng của 1 người dùng
+    Route::get('/total/{userId}', [CartController::class, 'cartTotal']); // Tổng tiền giỏ hàng của 1 người dùng
+    Route::get('/point/{userId}', [CartController::class, 'cartPoint']); // Số điểm tích lũy của 1 người dùng trong giỏ hàng
+    Route::post('/movecart', [CartController::class, 'moveCartToDatabase']); 
+    Route::post('/add', [CartController::class, 'addToCart']);
+    Route::put('/update/{userId}/{productVariantId}', [CartController::class, 'updateCart']); // cập nhật số lượng 1 sản phẩm trong giỏ hàng của 1 người dùng
+    Route::delete('/delete/{userId}/{productVariantId}', [CartController::class, 'deleteCart']); // xóa 1 sản phẩm trong giỏ hàng của 1 người dùng
+    Route::delete('/clear/{userId}', [CartController::class, 'clearCart']); // xóa tất cả sản phẩm trong giỏ hàng của 1 người dùng
+    Route::delete('/selectdelete/{userId}', [CartController::class, 'removeSelectedItems']); // xóa sản phẩm trong giỏ hàng của 1 người dùng theo select
+});
+
+
+route::group([
+    'prefix' => 'api/checkout'
+],function(){
+    Route::get('/showorder', [OrderController::class, 'show']); // lấy danh sach đơn hàng tất cả
+    Route::get('/showorder/{userId}', [OrderController::class, 'showOrder']); // lấy danh sach đơn hàng của 1 người dùng
+    Route::get('/showorderdetail/{order}', [OrderController::class, 'showOrderdetail']); // lấy chi tiết của 1 đơn hàng
+    Route::post('/orders', [OrderController::class, 'checkout']); // tạo đơn hàng
+});
+
+route::group([
+    'prefix' => 'api/payment'
+],function(){
+    Route::get('/vnpay_return', [PaymentController::class, 'vnpayReturn']); // trả về dữ liệu lưu vào db
+    Route::post('/vnpay_payment', [PaymentController::class, 'vnpay_payment']); // thanh toán vnpay
 });
